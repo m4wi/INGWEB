@@ -158,7 +158,7 @@ async function cargarGreenPoints() {
         ? greenIcon
         : redIcon;
 
-      const marker = L.marker(gp.coord,{ icon })
+      const marker = L.marker(gp.coord, { icon })
         .addTo(map)
         .bindPopup(popup1(gp));
       greenpointMarkers.push(marker);

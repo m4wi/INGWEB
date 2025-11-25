@@ -1,16 +1,26 @@
 import express from 'express'
 import cors from 'cors';
 import pool from './database/db.js'; // importa la conexión
+
+import { Router } from 'express';
 import { authenticateToken } from './middlewares/auth.js';
+import userRoutes from './routes/user.routes.js'
+
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 import jwt from "jsonwebtoken";
 const SECRET_KEY = "ingweb1"; // mejor usar .env
 
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",     // cualquiera
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type, Authorization"
+}));
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true })); // Opcional si envías forms
 
 app.get("/", (req, res) => {
   res.send("Hello desde backend")
@@ -19,7 +29,7 @@ app.get("/", (req, res) => {
 
 
 // 🧩 Registro de usuario
-app.post("/api/usuarios", async (req, res) => {
+/* app.post("/api/usuarios", async (req, res) => {
   const { username, password, tipo } = req.body;
   if (!username || !password || !tipo) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
@@ -54,11 +64,11 @@ app.post("/api/usuarios", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Error al registrar usuario" });
   }
-});
+}); */
 
 
 // 🔐 Login de usuario
-app.post("/api/login", async (req, res) => {
+/* app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: "Faltan datos" });
@@ -92,13 +102,13 @@ app.post("/api/login", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Error al iniciar sesión" });
   }
-});
+}); */
 
 
 
 
 // Endpoint para guardar un GreenPoint
-app.post("/greenpoints", async (req, res) => {
+/* app.post("/greenpoints", async (req, res) => {
   const { name, coord, materials, descripcion } = req.body;
 
   // Extraer token del header
@@ -155,12 +165,12 @@ app.post("/greenpoints", async (req, res) => {
   } finally {
     client.release();
   }
-});
+}); */
 
 
 
 // GET /greenpoints - Devuelve todos los GreenPoints sin materiales
-app.get("/greenpoints", async (req, res) => {
+/* app.get("/greenpoints", async (req, res) => {
   const client = await pool.connect();
   try {
     const query = `
@@ -194,7 +204,7 @@ app.get("/greenpoints", async (req, res) => {
     client.release();
   }
 });
-
+ */
 
 
 app.get("/greenpoints/mine", authenticateToken, async (req, res) => {
@@ -236,7 +246,7 @@ app.get("/greenpoints/mine", authenticateToken, async (req, res) => {
 });
 
 // DELETE GreenPoint propio
-app.delete("/greenpoints/:id", authenticateToken, async (req, res) => {
+/* app.delete("/greenpoints/:id", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
@@ -258,8 +268,8 @@ app.delete("/greenpoints/:id", authenticateToken, async (req, res) => {
     client.release();
   }
 });
-
-app.patch("/greenpoints/:id", authenticateToken, async (req, res) => {
+ */
+/* app.patch("/greenpoints/:id", authenticateToken, async (req, res) => {
   const client = await pool.connect();
   const { id } = req.params;
   const { descripcion, coord, materials } = req.body; // ahora también recibimos coord
@@ -317,7 +327,7 @@ app.patch("/greenpoints/:id", authenticateToken, async (req, res) => {
   } finally {
     client.release();
   }
-});
+}); */
 
 
 
@@ -358,7 +368,7 @@ app.patch('/greenpoints/:id/estado', authenticateToken, async (req, res) => {
 
 
 
-app.patch('/usuarios/:id', async (req, res) => {
+/* app.patch('/usuarios/:id', async (req, res) => {
   const { id } = req.params;
   const { username, password, tipo, correo } = req.body;
 
@@ -412,9 +422,7 @@ app.patch('/usuarios/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar usuario' });
   }
 });
-
-
-
+ */
 
 
 // PATCH /greenpoints/:id/recolector
@@ -455,15 +463,29 @@ app.patch('/greenpoints/:id/recolector', async (req, res) => {
 
 
 
+const router = Router();
+app.use('/users', userRoutes);
 
 
+import upload  from './middlewares/upload.js'
+import { GreenPointController } from './controllers/greenpoint.controller.js';
+import { AuthController } from './controllers/auth.controller.js';
+//app.post('/create', upload, UserController.updateProfilePhoto)
 
 
+// ✅ Obtén __dirname correctamente en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use('/profile_photo', express.static(join(__dirname, 'storage', 'profile_photo')));
 
 
+app.post('/auth/login', AuthController.login )
+app.get('/greenpointsx', GreenPointController.getAllGreenPoints )
+app.post('/greenpointx', GreenPointController.createGreenPoint )
+app.delete('/greenpointx/:id', GreenPointController.deleteGreenPoint)
 
-
-
+app.post('/findc/:categoryId', GreenPointController.findGreenPointsByCategory)
+app.get('/nearby', GreenPointController.findGreenPointsByLocation)
 
 /**
  * TODO: agregar validaciones de token

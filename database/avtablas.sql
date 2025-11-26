@@ -1,4 +1,4 @@
--- Active: 1761710895423@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
+-- Active: 1764120770015@@ep-fragrant-resonance-ac3k1ssp-pooler.sa-east-1.aws.neon.tech@5432@sprout
 
 
 CREATE TABLE users (
@@ -158,7 +158,35 @@ CREATE TABLE greenpoint_comments (
     FOREIGN KEY (id_user) REFERENCES users(id_user) ON DELETE CASCADE
 );
 
+CREATE TABLE photos (
+    id_photo SERIAL PRIMARY KEY,
+    id_greenpoint INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE
+);
 
+CREATE TABLE greenpoint_reservations (
+    id_reservation SERIAL PRIMARY KEY,
+    id_greenpoint INTEGER NOT NULL,
+    id_collector INTEGER NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')),
+    message TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_greenpoint) REFERENCES greenpoints(id_greenpoint) ON DELETE CASCADE,
+    FOREIGN KEY (id_collector) REFERENCES users(id_user) ON DELETE CASCADE
+);
+
+-- Evitar múltiples reservas pendientes del mismo recolector en el mismo greenpoint
+CREATE UNIQUE INDEX unique_pending_greenpoint_collector
+ON greenpoint_reservations(id_greenpoint, id_collector)
+WHERE status = 'pending';
+
+-- Índice para búsquedas rápidas por greenpoint y estado
+CREATE INDEX idx_greenpoint_reservations_greenpoint_status ON greenpoint_reservations(id_greenpoint, status);
+CREATE INDEX idx_greenpoint_reservations_collector ON greenpoint_reservations(id_collector);
 
 
 # crear una tabla comentarios de muchos a muchos con greenpoints

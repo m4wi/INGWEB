@@ -1,12 +1,12 @@
 import express from 'express'
 import cors from 'cors';
-import pool from './database/db.js'; // importa la conexión
+import pool from './src/database/db.js'; // importa la conexión
 
 import { Router } from 'express';
-import { authenticateToken } from './middlewares/auth.js';
-import userRoutes from './routes/user.routes.js'
-import commentRoutes from './routes/greenpointComment.routes.js'
-import reservationRoutes from './routes/greenpointReservation.routes.js'
+import { authenticateToken } from './src/middlewares/auth.js';
+import userRoutes from './src/routes/user.routes.js'
+import commentRoutes from './src/routes/greenpointComment.routes.js'
+import reservationRoutes from './src/routes/greenpointReservation.routes.js'
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -471,9 +471,9 @@ app.use('/api', commentRoutes);
 app.use('/api', reservationRoutes);
 
 
-import upload  from './middlewares/upload.js'
-import { GreenPointController } from './controllers/greenpoint.controller.js';
-import { AuthController } from './controllers/auth.controller.js';
+import upload from './src/middlewares/upload.js'
+import { GreenPointController } from './src/controllers/greenpoint.controller.js';
+import { AuthController } from './src/controllers/auth.controller.js';
 //app.post('/create', upload, UserController.updateProfilePhoto)
 
 
@@ -482,7 +482,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 app.use('/profile_photo', express.static(join(__dirname, 'storage', 'profile_photo')));
 
-app.post('/auth/login', AuthController.login )
+app.post('/auth/login', AuthController.login)
 
 const PORT = 3000
 app.listen(PORT, () => {
